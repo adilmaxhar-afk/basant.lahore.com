@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Basant Multiplayer 🪁🇵🇰</title>
+<style>
+body { margin:0; overflow:hidden; background: linear-gradient(#87CEEB,#FFD700); }
+canvas { display:block; }
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let players = {};
+
+// receive players
+socket.on("players", data => {
+    players = data;
+});
+
+// mouse control
+canvas.addEventListener("mousemove", e => {
+    socket.emit("move", {
+        x: e.clientX,
+        y: e.clientY
+    });
+});
+
+// draw kite
+function drawKite(x, y, color, size) {
+    ctx.fillStyle = color;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + 20, y + 30);
+    ctx.lineTo(x, y + 60);
+    ctx.lineTo(x - 20, y + 30);
+    ctx.closePath();
+    ctx.fill();
+
+    // string
+    ctx.strokeStyle = "white";
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, canvas.height);
+    ctx.stroke();
+}
+
+// loop
+function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    for (let id in players) {
+        let p = players[id];
+
+        let color = (id === socket.id) ? "red" : "green";
+
+        drawKite(p.x, p.y, color, p.size);
+
+        ctx.fillStyle = "black";
+        ctx.font = "12px Arial";
+        ctx.fillText("HP:" + p.hp, p.x - 10, p.y - 10);
+    }
+
+    requestAnimationFrame(draw);
+}
+
+draw();
+</script>
+
+</body>
+</html>
